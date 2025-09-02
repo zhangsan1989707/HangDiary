@@ -1,67 +1,86 @@
-# LeoDiary - Android日记应用
+# HangDiary - Android日记应用
 
-HangDiary是一款简洁优雅的日记应用，支持记录日记、待办事项，并提供标签管理功能。
+HangDiary是一款简洁优雅的Android日记应用，基于Jetpack Compose构建，支持记录日记、管理待办事项，并提供标签和分类管理功能。
 
 ## 功能特性
 
 - 📝 **日记记录**：轻松创建和编辑日记，支持标题、内容和标签
-- 📅 **日历视图**：通过直观的日历界面查看和管理日记
+- 🏷️ **标签管理**：为日记添加自定义标签，方便分类和筛选
+- 📂 **分类系统**：通过分类整理日记，提高管理效率
 - 🔍 **搜索功能**：快速查找特定内容的日记
-- 🏷️ **标签管理**：为日记添加标签，方便分类和筛选
 - ⭐ **收藏功能**：标记重要的日记为收藏
-- 📊 **统计功能**：查看日记数量和写作习惯统计
-- 👤 **个人资料**：用户信息管理和个性化设置
+- 📌 **顶置功能**：将重要日记顶置在列表顶部
+- ✅ **待办事项**：管理个人任务和待办事项
+- 🖼️ **图片支持**：在日记中添加图片
+- 🌤️ **心情和天气**：记录日记时的心情和天气状态
 
 ## 技术栈
 
 - **开发语言**：Kotlin
-- **Android SDK**：最低支持 29，目标SDK 33
-- **构建系统**：Gradle 7.3.1
-- **数据库**：Room 2.5.2
-- **异步编程**：Kotlin Coroutines 1.6.4
-- **UI组件**：AndroidX、Material Components
-- **导航**：Navigation Component
-- **图像处理**：CircleImageView
-- **日期时间**：ThreeTenABP
+- **UI框架**：Jetpack Compose
+- **架构模式**：MVVM (Model-View-ViewModel)
+- **数据库**：Room
+- **依赖注入**：Hilt
+- **异步处理**：Kotlin Coroutines
+- **导航**：Jetpack Navigation Compose
+- **图片加载**：Coil
+- **JSON处理**：Gson
+- **构建系统**：Gradle (Kotlin DSL)
 
 ## 项目结构
 
 ```
-├── app/                          # 应用主模块
-│   ├── src/main/java/            # 源代码目录
-│   │   └── com/example/leodiary/ # 包名目录
-│   │       ├── data/             # 数据层（Room数据库相关）
-│   │       ├── ui/               # UI层（Activity、Fragment等）
-│   │       └── ...               # 其他组件
-│   ├── src/main/res/             # 资源文件
-│   └── build.gradle              # 模块构建配置
-├── .github/workflows/            # GitHub Actions工作流
-│   └── build-apk.yml             # APK构建工作流
-├── gradle/                       # Gradle包装器
-├── docs/                         # 文档
-│   └── github-actions-apk-build-guide.md # CI/CD构建指南
-├── build.gradle                  # 项目级构建配置
-├── settings.gradle               # 项目设置
-└── .gitignore                    # Git忽略规则
+app/src/main/
+├── java/com/example/hangdiary/
+│   ├── data/                   # 数据层
+│   │   ├── dao/                # 数据访问对象
+│   │   ├── model/              # 数据模型
+│   │   ├── repository/         # 数据仓库
+│   │   └── util/               # 数据工具类
+│   ├── di/                     # 依赖注入
+│   ├── ui/                     # UI层
+│   │   ├── components/         # 可复用组件
+│   │   ├── navigation/         # 导航
+│   │   ├── screens/            # 屏幕界面
+│   │   └── theme/              # 主题和样式
+│   ├── viewmodel/              # 视图模型
+│   ├── HangDiaryApplication.kt # 应用程序类
+│   └── MainActivity.kt         # 主活动
+└── res/                        # 资源文件
 ```
+
+## 数据模型
+
+- **Diary**: 日记实体，包含标题、内容、创建时间等信息
+- **Category**: 分类实体，用于对日记进行分类
+- **Tag**: 标签实体，可以添加到日记中
+- **Todo**: 待办事项实体，包含标题、内容、完成状态等
+- **DiaryTagCrossRef**: 日记和标签的多对多关联
+
+## 主要界面
+
+- **日记列表**: 显示所有日记，支持搜索、筛选和排序
+- **日记详情**: 查看和编辑日记内容
+- **分类管理**: 创建和管理日记分类
+- **待办事项**: 管理个人任务和待办事项
+- **标签管理**: 创建和管理标签
 
 ## 快速开始
 
 ### 前提条件
 
-- Android Studio 最新稳定版
-- Android SDK 29+ (Android 10+)
-- JDK 17
-- Gradle 7.3.1
+- Android Studio Hedgehog | 2023.1.1 或更高版本
+- JDK 11 或更高版本
+- Android SDK 24+ (Android 7.0+)
 
 ### 构建和运行
 
 1. 克隆项目
    ```bash
-   git clone https://github.com/[your-username]/LeoDiary.git
+   git clone https://github.com/zhangsan1989707/HangDiary.git
    ```
 
-2. 打开Android Studio并导入项目
+2. 在Android Studio中打开项目
 
 3. 等待Gradle同步完成
 
@@ -70,41 +89,21 @@ HangDiary是一款简洁优雅的日记应用，支持记录日记、待办事�
 ## 使用指南
 
 ### 创建日记
-1. 在主界面点击悬浮按钮 (+) 
-2. 输入标题、内容和标签
-3. 点击保存按钮完成创建
+1. 在主界面点击右下角的 "+" 按钮
+2. 输入标题和内容
+3. 可选择添加分类、标签、心情和天气
+4. 点击保存按钮完成创建
 
-### 查看和编辑日记
-1. 在列表或日历视图中点击想要查看的日记
-2. 点击编辑按钮进行修改
-3. 修改完成后点击保存
+### 管理待办事项
+1. 在主界面点击右下角的待办事项按钮
+2. 创建新的待办事项
+3. 标记完成或删除已完成的待办事项
 
-### 使用搜索功能
-1. 在主界面点击搜索图标
-2. 输入关键词进行搜索
-3. 查看搜索结果
-
-### 使用标签筛选
-1. 在搜索结果中点击标签进行筛选
-2. 或者在特定界面使用标签过滤功能
-
-## GitHub Actions CI/CD
-
-该项目配置了GitHub Actions自动构建APK文件。每当代码推送到master分支时，工作流会自动执行以下步骤：
-
-1. 检查代码
-2. 设置JDK 17环境
-3. 构建调试和发布版本的APK
-4. 上传构建产物
-
-详细配置请参阅 [GitHub Actions APK构建指南](docs/github-actions-apk-build-guide.md)
-
-## 注意事项
-
-1. 应用使用Room数据库本地存储日记数据
-2. 数据仅存储在设备本地，不会自动同步到云端
-3. 为保证数据安全，建议定期备份应用数据
-4. 当前工作流配置使用JDK 17，以兼容GitHub Actions环境中的Gradle 9.0.0
+### 使用标签和分类
+1. 通过侧边栏访问分类和标签
+2. 创建新的分类和标签
+3. 为日记添加标签和分类
+4. 使用标签和分类筛选日记
 
 ## 贡献指南
 
@@ -118,12 +117,8 @@ HangDiary是一款简洁优雅的日记应用，支持记录日记、待办事�
 
 [MIT](LICENSE) - 详细信息请查看LICENSE文件
 
-## 致谢
+## 联系方式
 
-感谢所有为这个项目做出贡献的开发者和设计师。
+如有问题或建议，请通过以下方式联系：
 
-## 联系我们
-
-如有问题或建议，请通过以下方式联系我：
-
-- GitHub: [https://github.com/[zhangsan1989707]/LeoDiary](https://github.com/[zhangsan1989707]/LeoDiary)
+- GitHub: [https://github.com/zhangsan1989707/HangDiary](https://github.com/zhangsan1989707/HangDiary)
