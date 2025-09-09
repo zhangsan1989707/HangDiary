@@ -39,9 +39,6 @@ class DiaryListViewModel(
     // 当前搜索关键词
     private var currentSearchKeyword: String? = null
     
-    // 当前选中的分类ID
-    private var currentCategoryId: Long? = null
-    
     // 标签筛选
     private var currentTagIds: List<Long> = emptyList()
     
@@ -56,48 +53,23 @@ class DiaryListViewModel(
     fun loadAllDiaries() {
         viewModelScope.launch {
             currentSearchKeyword = null
-            currentCategoryId = null
             currentTagIds = emptyList()
             
             diaryRepository.getAllDiaries().collectLatest { diaries ->
-                val diaryWithTagsList = mutableListOf<DiaryWithTags>()
-                
-                // 为每个日记获取标签
-                diaries.forEach { diary ->
-                    val tags = tagRepository.getTagsForDiary(diary.id)
-                    tags.collect { tagList ->
-                        diaryWithTagsList.add(DiaryWithTags(diary, tagList))
-                        if (diaryWithTagsList.size == diaries.size) {
-                            _diaryListState.value = diaryWithTagsList
-                        }
+                val diaryFlows = diaries.map { diary ->
+                    tagRepository.getTagsForDiary(diary.id).map { tags ->
+                        DiaryWithTags(diary, tags)
                     }
                 }
-            }
-        }
-    }
-    
-    /**
-     * 根据分类加载日记
-     * @param categoryId 分类ID
-     */
-    fun loadDiariesByCategory(categoryId: Long) {
-        viewModelScope.launch {
-            currentSearchKeyword = null
-            currentCategoryId = categoryId
-            currentTagIds = emptyList()
-            
-            diaryRepository.getDiariesByCategory(categoryId).collectLatest { diaries ->
-                val diaryWithTagsList = mutableListOf<DiaryWithTags>()
                 
-                // 为每个日记获取标签
-                diaries.forEach { diary ->
-                    val tags = tagRepository.getTagsForDiary(diary.id)
-                    tags.collect { tagList ->
-                        diaryWithTagsList.add(DiaryWithTags(diary, tagList))
-                        if (diaryWithTagsList.size == diaries.size) {
-                            _diaryListState.value = diaryWithTagsList
-                        }
+                if (diaryFlows.isNotEmpty()) {
+                    combine(diaryFlows) { diaryWithTagsArray ->
+                        diaryWithTagsArray.toList()
+                    }.collect { diaryWithTagsList ->
+                        _diaryListState.value = diaryWithTagsList
                     }
+                } else {
+                    _diaryListState.value = emptyList()
                 }
             }
         }
@@ -110,24 +82,26 @@ class DiaryListViewModel(
     fun searchDiaries(keyword: String) {
         viewModelScope.launch {
             currentSearchKeyword = keyword
-            currentCategoryId = null
             currentTagIds = emptyList()
             
             if (keyword.isBlank()) {
                 loadAllDiaries()
             } else {
                 diaryRepository.searchDiaries(keyword).collectLatest { diaries ->
-                    val diaryWithTagsList = mutableListOf<DiaryWithTags>()
-                    
-                    // 为每个日记获取标签
-                    diaries.forEach { diary ->
-                        val tags = tagRepository.getTagsForDiary(diary.id)
-                        tags.collect { tagList ->
-                            diaryWithTagsList.add(DiaryWithTags(diary, tagList))
-                            if (diaryWithTagsList.size == diaries.size) {
-                                _diaryListState.value = diaryWithTagsList
-                            }
+                    val diaryFlows = diaries.map { diary ->
+                        tagRepository.getTagsForDiary(diary.id).map { tags ->
+                            DiaryWithTags(diary, tags)
                         }
+                    }
+                    
+                    if (diaryFlows.isNotEmpty()) {
+                        combine(diaryFlows) { diaryWithTagsArray ->
+                            diaryWithTagsArray.toList()
+                        }.collect { diaryWithTagsList ->
+                            _diaryListState.value = diaryWithTagsList
+                        }
+                    } else {
+                        _diaryListState.value = emptyList()
                     }
                 }
             }
@@ -142,35 +116,25 @@ class DiaryListViewModel(
     fun loadDiariesByDateRange(start: LocalDateTime, end: LocalDateTime) {
         viewModelScope.launch {
             currentSearchKeyword = null
-            currentCategoryId = null
             currentTagIds = emptyList()
             
             diaryRepository.getDiariesByDateRange(start, end).collectLatest { diaries ->
-                val diaryWithTagsList = mutableListOf<DiaryWithTags>()
-                
-                // 为每个日记获取标签
-                diaries.forEach { diary ->
-                    val tags = tagRepository.getTagsForDiary(diary.id)
-                    tags.collect { tagList ->
-                        diaryWithTagsList.add(DiaryWithTags(diary, tagList))
-                        if (diaryWithTagsList.size == diaries.size) {
-                            _diaryListState.value = diaryWithTagsList
-                        }
+                val diaryFlows = diaries.map { diary ->
+                    tagRepository.getTagsForDiary(diary.id).map { tags ->
+                        DiaryWithTags(diary, tags)
                     }
                 }
+                
+                if (diaryFlows.isNotEmpty()) {
+                    combine(diaryFlows) { diaryWithTagsArray ->
+                        diaryWithTagsArray.toList()
+                    }.collect { diaryWithTagsList ->
+                        _diaryListState.value = diaryWithTagsList
+                    }
+                } else {
+                    _diaryListState.value = emptyList()
+                }
             }
-        }
-    }
-    
-    /**
-     * 切换日记的收藏状态
-     * @param diary 要切换收藏状态的日记
-     */
-    fun toggleFavorite(diary: Diary) {
-        viewModelScope.launch {
-            diaryRepository.updateFavoriteStatus(diary.id, !diary.isFavorite)
-            // 刷新当前列表
-            refreshCurrentList()
         }
     }
     
@@ -183,6 +147,43 @@ class DiaryListViewModel(
             diaryRepository.updatePinnedStatus(diary.id, !diary.isPinned)
             // 刷新当前列表
             refreshCurrentList()
+        }
+    }
+
+    /**
+     * 更新日记的颜色
+     * @param diaryId 日记ID
+     * @param color 日记颜色
+     */
+    fun updateDiaryColor(diaryId: Long, color: String?) {
+        viewModelScope.launch {
+            diaryRepository.updateDiaryColor(diaryId, color)
+            // 刷新当前列表
+            refreshCurrentList()
+        }
+    }
+
+    /**
+     * 批量更新日记的颜色
+     * @param diaryIds 日记ID列表
+     * @param color 日记颜色
+     */
+    fun updateDiariesColor(diaryIds: List<Long>, color: String?) {
+        viewModelScope.launch {
+            diaryRepository.updateDiariesColor(diaryIds, color)
+            // 刷新当前列表
+            refreshCurrentList()
+        }
+    }
+    
+    /**
+     * 批量删除日记
+     * @param diaryIds 日记ID列表
+     */
+    fun deleteDiaries(diaryIds: List<Long>) {
+        viewModelScope.launch {
+            diaryRepository.deleteDiariesByIds(diaryIds)
+            // 列表会自动刷新，因为Room会触发Flow更新
         }
     }
     
@@ -204,23 +205,25 @@ class DiaryListViewModel(
     fun loadDiariesByTags(tagIds: List<Long>) {
         viewModelScope.launch {
             currentSearchKeyword = null
-            currentCategoryId = null
             currentTagIds = tagIds
             if (tagIds.isEmpty()) {
                 loadAllDiaries()
             } else {
                 diaryRepository.getDiariesByTags(tagIds).collectLatest { diaries ->
-                    val diaryWithTagsList = mutableListOf<DiaryWithTags>()
-                    
-                    // 为每个日记获取标签
-                    diaries.forEach { diary ->
-                        val tags = tagRepository.getTagsForDiary(diary.id)
-                        tags.collect { tagList ->
-                            diaryWithTagsList.add(DiaryWithTags(diary, tagList))
-                            if (diaryWithTagsList.size == diaries.size) {
-                                _diaryListState.value = diaryWithTagsList
-                            }
+                    val diaryFlows = diaries.map { diary ->
+                        tagRepository.getTagsForDiary(diary.id).map { tags ->
+                            DiaryWithTags(diary, tags)
                         }
+                    }
+                    
+                    if (diaryFlows.isNotEmpty()) {
+                        combine(diaryFlows) { diaryWithTagsArray ->
+                            diaryWithTagsArray.toList()
+                        }.collect { diaryWithTagsList ->
+                            _diaryListState.value = diaryWithTagsList
+                        }
+                    } else {
+                        _diaryListState.value = emptyList()
                     }
                 }
             }
@@ -228,52 +231,28 @@ class DiaryListViewModel(
     }
 
     /**
-     * 加载收藏的日记
-     */
-    fun loadFavoriteDiaries() {
-        viewModelScope.launch {
-            currentSearchKeyword = null
-            currentCategoryId = null
-            currentTagIds = emptyList()
-            
-            diaryRepository.getFavoriteDiaries().collectLatest { diaries ->
-                val diaryWithTagsList = mutableListOf<DiaryWithTags>()
-                
-                // 为每个日记获取标签
-                diaries.forEach { diary ->
-                    val tags = tagRepository.getTagsForDiary(diary.id)
-                    tags.collect { tagList ->
-                        diaryWithTagsList.add(DiaryWithTags(diary, tagList))
-                        if (diaryWithTagsList.size == diaries.size) {
-                            _diaryListState.value = diaryWithTagsList
-                        }
-                    }
-                }
-            }
-        }
-    }
-    
-    /**
      * 加载置顶的日记
      */
     fun loadPinnedDiaries() {
         viewModelScope.launch {
             currentSearchKeyword = null
-            currentCategoryId = null
             currentTagIds = emptyList()
             
-            diaryRepository.getPinnedDiaries().collectLatest { diaries: List<Diary> ->
-                val diaryWithTagsList = mutableListOf<DiaryWithTags>()
-                
-                // 为每个日记获取标签
-                diaries.forEach { diary: Diary ->
-                    val tags = tagRepository.getTagsForDiary(diary.id)
-                    tags.collect { tagList: List<Tag> ->
-                        diaryWithTagsList.add(DiaryWithTags(diary, tagList))
-                        if (diaryWithTagsList.size == diaries.size) {
-                            _diaryListState.value = diaryWithTagsList
-                        }
+            diaryRepository.getPinnedDiaries().collectLatest { diaries ->
+                val diaryFlows = diaries.map { diary ->
+                    tagRepository.getTagsForDiary(diary.id).map { tags ->
+                        DiaryWithTags(diary, tags)
                     }
+                }
+                
+                if (diaryFlows.isNotEmpty()) {
+                    combine(diaryFlows) { diaryWithTagsArray ->
+                        diaryWithTagsArray.toList()
+                    }.collect { diaryWithTagsList ->
+                        _diaryListState.value = diaryWithTagsList
+                    }
+                } else {
+                    _diaryListState.value = emptyList()
                 }
             }
         }
@@ -287,12 +266,11 @@ class DiaryListViewModel(
 
     /**
      * 刷新当前列表
-     * 根据当前的搜索关键词或分类ID重新加载数据
+     * 根据当前的搜索关键词或标签ID重新加载数据
      */
     private fun refreshCurrentList() {
         when {
             currentSearchKeyword != null -> searchDiaries(currentSearchKeyword!!)
-            currentCategoryId != null -> loadDiariesByCategory(currentCategoryId!!)
             currentTagIds.isNotEmpty() -> loadDiariesByTags(currentTagIds)
             else -> loadAllDiaries()
         }

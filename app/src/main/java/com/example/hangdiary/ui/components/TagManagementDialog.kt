@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Label
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Label
@@ -59,7 +60,7 @@ fun TagManagementDialog(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        imageVector = Icons.Default.Label,
+                        imageVector = Icons.AutoMirrored.Filled.Label,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary
                     )
@@ -102,7 +103,12 @@ fun TagManagementDialog(
                                 selected = true,
                                 onClick = {
                                     scope.launch {
-                                        viewModel.removeTagFromDiary(diary.id, tag.id)
+                                        try {
+                                            println("点击移除标签: tagId=${tag.id}, diaryId=${diary.id}")
+                                            viewModel.removeTagFromDiary(diary.id, tag.id)
+                                        } catch (e: Exception) {
+                                            println("移除标签异常: ${e.message}")
+                                        }
                                     }
                                 },
                                 label = { Text(tag.name) },
@@ -186,10 +192,15 @@ fun TagManagementDialog(
                                     selected = isSelected,
                                     onClick = {
                                         scope.launch {
-                                            if (isSelected) {
-                                                viewModel.removeTagFromDiary(diary.id, tag.id)
-                                            } else {
-                                                viewModel.addTagToDiary(diary.id, tag.id)
+                                            try {
+                                                println("点击标签操作: tagId=${tag.id}, diaryId=${diary.id}, isSelected=$isSelected")
+                                                if (isSelected) {
+                                                    viewModel.removeTagFromDiary(diary.id, tag.id)
+                                                } else {
+                                                    viewModel.addTagToDiary(diary.id, tag.id)
+                                                }
+                                            } catch (e: Exception) {
+                                                println("标签操作异常: ${e.message}")
                                             }
                                         }
                                     },
@@ -215,12 +226,19 @@ fun TagManagementDialog(
                         trailingIcon = {
                             IconButton(
                                 onClick = {
-                                    if (newTagName.isNotBlank()) {
-                                        scope.launch {
-                                            val color = viewModel.generateRandomTagColor()
-                                            viewModel.createTag(newTagName, color)
-                                            newTagName = ""
-                                            showAddTagField = false
+                                    scope.launch {
+                                        try {
+                                            if (newTagName.isNotBlank()) {
+                                                println("创建新标签: name=$newTagName")
+                                                val color = viewModel.generateRandomTagColor()
+                                                viewModel.createTag(newTagName, color)
+                                                newTagName = ""
+                                                showAddTagField = false
+                                            } else {
+                                                println("标签名称为空，不创建")
+                                            }
+                                        } catch (e: Exception) {
+                                            println("创建标签异常: ${e.message}")
                                         }
                                     }
                                 }

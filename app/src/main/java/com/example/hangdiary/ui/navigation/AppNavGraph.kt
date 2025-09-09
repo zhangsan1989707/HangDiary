@@ -1,23 +1,29 @@
 package com.example.hangdiary.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.NavType
-import com.example.hangdiary.data.repository.CategoryRepository
+import androidx.hilt.navigation.compose.hiltViewModel
+
 import com.example.hangdiary.data.repository.DiaryRepository
 import com.example.hangdiary.data.repository.TagRepository
 import com.example.hangdiary.data.repository.TodoRepository
-import com.example.hangdiary.ui.screens.CategoryScreen
+
 import com.example.hangdiary.ui.screens.DiaryDetailScreen
 import com.example.hangdiary.ui.screens.DiaryListScreen
+import com.example.hangdiary.ui.screens.TagManagementScreen
 import com.example.hangdiary.ui.screens.TodoListScreen
-import com.example.hangdiary.viewmodel.CategoryViewModel
+import com.example.hangdiary.ui.screens.SettingsScreen
+import com.example.hangdiary.ui.screens.AboutScreen
+
 import com.example.hangdiary.viewmodel.DiaryListViewModel
 import com.example.hangdiary.viewmodel.TagManagementViewModel
 import com.example.hangdiary.viewmodel.TodoListViewModel
+import com.example.hangdiary.viewmodel.SettingsViewModel
 
 /**
  * 应用导航图
@@ -27,9 +33,9 @@ import com.example.hangdiary.viewmodel.TodoListViewModel
 fun AppNavGraph(
     navController: NavHostController,
     diaryRepository: DiaryRepository,
-    categoryRepository: CategoryRepository,
     tagRepository: TagRepository,
-    todoRepository: TodoRepository
+    todoRepository: TodoRepository,
+    darkTheme: MutableState<Boolean>
 ) {
     NavHost(
         navController = navController,
@@ -37,14 +43,15 @@ fun AppNavGraph(
     ) {
         composable(Screen.DiaryList.route) {
             val diaryViewModel = DiaryListViewModel(diaryRepository, tagRepository)
-            val categoryViewModel = CategoryViewModel(categoryRepository)
             val tagViewModel = TagManagementViewModel(tagRepository)
+            val settingsViewModel: SettingsViewModel = hiltViewModel()
             
             DiaryListScreen(
                 viewModel = diaryViewModel,
-                categoryViewModel = categoryViewModel,
                 tagViewModel = tagViewModel,
-                navController = navController
+                settingsViewModel = settingsViewModel,
+                navController = navController,
+                darkTheme = darkTheme
             )
         }
         
@@ -58,18 +65,41 @@ fun AppNavGraph(
             )
         ) { backStackEntry ->
             val diaryId = backStackEntry.arguments?.getLong("diaryId") ?: 0L
-            DiaryDetailScreen(navController, diaryRepository, diaryId)
+            val settingsViewModel: SettingsViewModel = hiltViewModel()
+            DiaryDetailScreen(navController, diaryRepository, tagRepository, settingsViewModel, diaryId)
         }
         
-        composable(Screen.Category.route) {
-            CategoryScreen(navController, categoryRepository)
-        }
+
         
         composable(Screen.TodoList.route) {
             val todoViewModel = TodoListViewModel(todoRepository)
             TodoListScreen(
                 viewModel = todoViewModel,
                 navController = navController
+            )
+        }
+        
+        composable(Screen.TagManagement.route) {
+            val tagViewModel = TagManagementViewModel(tagRepository)
+            TagManagementScreen(
+                viewModel = tagViewModel,
+                onBack = { navController.popBackStack() }
+            )
+        }
+        
+        composable(Screen.Settings.route) {
+            val settingsViewModel: SettingsViewModel = hiltViewModel()
+            
+            SettingsScreen(
+                settingsViewModel = settingsViewModel,
+                darkTheme = darkTheme,
+                onBack = { navController.popBackStack() }
+            )
+        }
+        
+        composable(Screen.About.route) {
+            AboutScreen(
+                onBack = { navController.popBackStack() }
             )
         }
     }
@@ -81,6 +111,8 @@ fun AppNavGraph(
 sealed class Screen(val route: String) {
     object DiaryList : Screen("diaryList")
     object DiaryDetail : Screen("diaryDetail/{diaryId}")
-    object Category : Screen("category")
     object TodoList : Screen("todoList")
+    object TagManagement : Screen("tagManagement")
+    object Settings : Screen("settings")
+    object About : Screen("about")
 }

@@ -55,12 +55,15 @@ class TagManagementViewModel @Inject constructor(
     fun loadTagsForDiary(diaryId: Long) {
         viewModelScope.launch {
             try {
+                println("开始加载日记标签: diaryId=$diaryId")
                 tagRepository.getTagsForDiary(diaryId)
                     .collect { tags ->
+                        println("加载到日记标签: ${tags.size}个")
                         _state.update { it.copy(selectedTags = tags) }
                     }
             } catch (e: Exception) {
-                _state.update { it.copy(error = e.message) }
+                println("加载日记标签失败: ${e.message}")
+                _state.update { it.copy(error = "加载标签失败: ${e.message}") }
             }
         }
     }
@@ -71,11 +74,14 @@ class TagManagementViewModel @Inject constructor(
     fun createTag(name: String, color: Int) {
         viewModelScope.launch {
             try {
-                tagRepository.createTag(name, color)
+                println("创建新标签: name=$name, color=$color")
+                val tagId = tagRepository.createTag(name, color)
+                println("新标签创建成功: id=$tagId")
                 // 创建成功后重新加载标签列表
                 loadAllTags()
             } catch (e: Exception) {
-                _state.update { it.copy(error = e.message) }
+                println("创建新标签失败: ${e.message}")
+                _state.update { it.copy(error = "创建标签失败: ${e.message}") }
             }
         }
     }
@@ -89,8 +95,11 @@ class TagManagementViewModel @Inject constructor(
                 tagRepository.addTagToDiary(diaryId, tagId)
                 // 添加成功后重新加载日记的标签
                 loadTagsForDiary(diaryId)
+                // 同时添加日志输出以便调试
+                println("标签添加成功: diaryId=$diaryId, tagId=$tagId")
             } catch (e: Exception) {
-                _state.update { it.copy(error = e.message) }
+                _state.update { it.copy(error = "添加标签失败: ${e.message}") }
+                println("标签添加失败: ${e.message}")
             }
         }
     }
@@ -104,8 +113,11 @@ class TagManagementViewModel @Inject constructor(
                 tagRepository.removeTagFromDiary(diaryId, tagId)
                 // 移除成功后重新加载日记的标签
                 loadTagsForDiary(diaryId)
+                // 同时添加日志输出以便调试
+                println("标签移除成功: diaryId=$diaryId, tagId=$tagId")
             } catch (e: Exception) {
-                _state.update { it.copy(error = e.message) }
+                _state.update { it.copy(error = "移除标签失败: ${e.message}") }
+                println("标签移除失败: ${e.message}")
             }
         }
     }
@@ -117,12 +129,15 @@ class TagManagementViewModel @Inject constructor(
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
             try {
+                println("开始加载所有标签")
                 tagRepository.getAllTags()
                     .collect { tags ->
+                        println("加载到所有标签: ${tags.size}个")
                         _state.update { it.copy(tags = tags, isLoading = false) }
                     }
             } catch (e: Exception) {
-                _state.update { it.copy(error = e.message, isLoading = false) }
+                println("加载所有标签失败: ${e.message}")
+                _state.update { it.copy(error = "加载标签失败: ${e.message}", isLoading = false) }
             }
         }
     }

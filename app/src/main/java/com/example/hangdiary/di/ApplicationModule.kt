@@ -1,12 +1,12 @@
 package com.example.hangdiary.di
 
-import com.example.hangdiary.data.dao.CategoryDao
 import com.example.hangdiary.data.dao.DiaryDao
 import com.example.hangdiary.data.dao.DiaryTagDao
+import com.example.hangdiary.data.dao.SettingsDao
 import com.example.hangdiary.data.dao.TagDao
 import com.example.hangdiary.data.dao.TodoDao
-import com.example.hangdiary.data.repository.CategoryRepository
 import com.example.hangdiary.data.repository.DiaryRepository
+import com.example.hangdiary.data.repository.SettingsRepository
 import com.example.hangdiary.data.repository.TagRepository
 import com.example.hangdiary.data.repository.TodoRepository
 import dagger.Module
@@ -35,17 +35,6 @@ object ApplicationModule {
     }
 
     /**
-     * 提供CategoryRepository实例
-     * @param categoryDao CategoryDao实例
-     * @return CategoryRepository实例
-     */
-    @Provides
-    @Singleton
-    fun provideCategoryRepository(categoryDao: CategoryDao): CategoryRepository {
-        return CategoryRepository(categoryDao)
-    }
-
-    /**
      * 提供TagRepository实例
      * @param tagDao TagDao实例
      * @param diaryTagDao DiaryTagDao实例
@@ -66,5 +55,16 @@ object ApplicationModule {
     @Singleton
     fun provideTodoRepository(todoDao: TodoDao): TodoRepository {
         return TodoRepository(todoDao)
+    }
+
+    /**
+     * 提供SettingsRepository实例
+     * @param settingsDao SettingsDao实例
+     * @return SettingsRepository实例
+     */
+    @Provides
+    @Singleton
+    fun provideSettingsRepository(settingsDao: SettingsDao): SettingsRepository {
+        return SettingsRepository(settingsDao)
     }
 }

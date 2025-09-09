@@ -57,15 +57,6 @@ interface DiaryDao {
     fun getAllDiaries(): Flow<List<Diary>>
 
     /**
-     * 根据分类ID查询日记
-     * 按顶置状态降序，创建时间降序排序
-     * @param categoryId 分类ID
-     * @return 该分类下的日记列表Flow
-     */
-    @Query("SELECT * FROM diaries WHERE categoryId = :categoryId ORDER BY isPinned DESC, createdAt DESC")
-    fun getDiariesByCategory(categoryId: Long): Flow<List<Diary>>
-
-    /**
      * 根据关键词搜索日记
      * 按顶置状态降序，创建时间降序排序
      * @param keyword 搜索关键词
@@ -73,14 +64,6 @@ interface DiaryDao {
      */
     @Query("SELECT * FROM diaries WHERE title LIKE '%' || :keyword || '%' OR content LIKE '%' || :keyword || '%' ORDER BY isPinned DESC, createdAt DESC")
     fun searchDiaries(keyword: String): Flow<List<Diary>>
-
-    /**
-     * 查询收藏的日记
-     * 按顶置状态降序，创建时间降序排序
-     * @return 收藏的日记列表Flow
-     */
-    @Query("SELECT * FROM diaries WHERE isFavorite = 1 ORDER BY isPinned DESC, createdAt DESC")
-    fun getFavoriteDiaries(): Flow<List<Diary>>
 
     /**
      * 根据日期范围查询日记
@@ -93,15 +76,6 @@ interface DiaryDao {
     fun getDiariesByDateRange(start: LocalDateTime, end: LocalDateTime): Flow<List<Diary>>
 
     /**
-     * 更新日记的收藏状态
-     * @param id 日记ID
-     * @param isFavorite 是否收藏
-     * @return 更新的行数
-     */
-    @Query("UPDATE diaries SET isFavorite = :isFavorite WHERE id = :id")
-    suspend fun updateFavoriteStatus(id: Long, isFavorite: Boolean): Int
-
-    /**
      * 更新日记的顶置状态
      * @param id 日记ID
      * @param isPinned 是否顶置
@@ -109,6 +83,32 @@ interface DiaryDao {
      */
     @Query("UPDATE diaries SET isPinned = :isPinned WHERE id = :id")
     suspend fun updatePinnedStatus(id: Long, isPinned: Boolean): Int
+
+    /**
+     * 更新日记的颜色
+     * @param id 日记ID
+     * @param color 日记颜色
+     * @return 更新的行数
+     */
+    @Query("UPDATE diaries SET color = :color WHERE id = :id")
+    suspend fun updateDiaryColor(id: Long, color: String?): Int
+
+    /**
+     * 批量更新日记的颜色
+     * @param ids 日记ID列表
+     * @param color 日记颜色
+     * @return 更新的行数
+     */
+    @Query("UPDATE diaries SET color = :color WHERE id IN (:ids)")
+    suspend fun updateDiariesColor(ids: List<Long>, color: String?): Int
+
+    /**
+     * 批量删除日记
+     * @param ids 日记ID列表
+     * @return 删除的行数
+     */
+    @Query("DELETE FROM diaries WHERE id IN (:ids)")
+    suspend fun deleteDiariesByIds(ids: List<Long>): Int
 
     /**
      * 查询置顶的日记

@@ -72,7 +72,6 @@ data class Diary(
     val title: String,
     val content: String,
     val category: String,
-    val mood: String,
     val createTime: Long,
     val updateTime: Long
 )

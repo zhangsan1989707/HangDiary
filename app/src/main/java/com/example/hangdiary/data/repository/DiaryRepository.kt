@@ -60,29 +60,12 @@ class DiaryRepository @Inject constructor(
     }
 
     /**
-     * 根据分类获取日记
-     * @param categoryId 分类ID
-     * @return 该分类下的日记列表Flow
-     */
-    fun getDiariesByCategory(categoryId: Long): Flow<List<Diary>> {
-        return diaryDao.getDiariesByCategory(categoryId)
-    }
-
-    /**
      * 搜索日记
      * @param keyword 搜索关键词
      * @return 匹配的日记列表Flow
      */
     fun searchDiaries(keyword: String): Flow<List<Diary>> {
         return diaryDao.searchDiaries(keyword)
-    }
-
-    /**
-     * 获取收藏的日记
-     * @return 收藏的日记列表Flow
-     */
-    fun getFavoriteDiaries(): Flow<List<Diary>> {
-        return diaryDao.getFavoriteDiaries()
     }
 
     /**
@@ -105,16 +88,6 @@ class DiaryRepository @Inject constructor(
     }
 
     /**
-     * 更新日记的收藏状态
-     * @param id 日记ID
-     * @param isFavorite 是否收藏
-     * @return 更新的行数
-     */
-    suspend fun updateFavoriteStatus(id: Long, isFavorite: Boolean): Int {
-        return diaryDao.updateFavoriteStatus(id, isFavorite)
-    }
-
-    /**
      * 更新日记的顶置状态
      * @param id 日记ID
      * @param isPinned 是否顶置
@@ -122,6 +95,35 @@ class DiaryRepository @Inject constructor(
      */
     suspend fun updatePinnedStatus(id: Long, isPinned: Boolean): Int {
         return diaryDao.updatePinnedStatus(id, isPinned)
+    }
+
+    /**
+     * 更新日记的颜色
+     * @param id 日记ID
+     * @param color 日记颜色
+     * @return 更新的行数
+     */
+    suspend fun updateDiaryColor(id: Long, color: String?): Int {
+        return diaryDao.updateDiaryColor(id, color)
+    }
+
+    /**
+     * 批量更新日记的颜色
+     * @param ids 日记ID列表
+     * @param color 日记颜色
+     * @return 更新的行数
+     */
+    suspend fun updateDiariesColor(ids: List<Long>, color: String?): Int {
+        return diaryDao.updateDiariesColor(ids, color)
+    }
+
+    /**
+     * 批量删除日记
+     * @param ids 日记ID列表
+     * @return 删除的行数
+     */
+    suspend fun deleteDiariesByIds(ids: List<Long>): Int {
+        return diaryDao.deleteDiariesByIds(ids)
     }
 
     /**

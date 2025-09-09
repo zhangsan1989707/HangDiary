@@ -347,12 +347,12 @@ fun DiaryDetailScreen(
 - 代码规范检查
 
 **清理清单**:
-- [ ] 移除mood相关UI组件
-- [ ] 移除weather相关UI组件
+- [x] 移除mood相关UI组件
+- [x] 移除weather相关UI组件
 - [ ] 移除category相关UI组件
-- [ ] 清理ViewModel中相关逻辑
-- [ ] 清理Repository中相关方法
-- [ ] 更新字符串资源
+- [x] 清理ViewModel中相关逻辑
+- [x] 清理Repository中相关方法
+- [x] 更新字符串资源
 
 ### 任务11: 文档完善
 **优先级**: P3

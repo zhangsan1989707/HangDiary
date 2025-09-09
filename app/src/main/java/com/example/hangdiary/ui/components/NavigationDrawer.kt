@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Label
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,8 +17,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.hangdiary.data.model.Category
+import androidx.navigation.NavHostController
 import com.example.hangdiary.data.model.Tag
+import com.example.hangdiary.ui.navigation.Screen
 
 /**
  * 导航抽屉组件
@@ -25,17 +27,15 @@ import com.example.hangdiary.data.model.Tag
  */
 @Composable
 fun NavigationDrawer(
-    categories: List<Category>,
     tags: List<Tag>,
-    selectedCategoryId: Long?,
     selectedTags: List<Long>,
-    onCategorySelected: (Long?) -> Unit,
     onTagSelected: (Long) -> Unit,
     onTagsCleared: () -> Unit,
     onTodoClick: () -> Unit,
     onSettingsClick: () -> Unit,
     onAboutClick: () -> Unit,
     onCloseDrawer: () -> Unit,
+    navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
     ModalDrawerSheet(
@@ -55,9 +55,8 @@ fun NavigationDrawer(
                 DrawerItem(
                     icon = Icons.Default.Home,
                     title = "全部日记",
-                    isSelected = selectedCategoryId == null && selectedTags.isEmpty(),
+                    isSelected = selectedTags.isEmpty(),
                     onClick = {
-                        onCategorySelected(null)
                         onTagsCleared()
                     }
                 )
@@ -79,40 +78,19 @@ fun NavigationDrawer(
             // 标签管理
             item {
                 DrawerItem(
-                    icon = Icons.Default.Label,
+                    icon = Icons.AutoMirrored.Filled.Label,
                     title = "标签管理",
                     isSelected = false,
                     onClick = {
-                        // TODO: 导航到标签管理页面
+                        navController.navigate(Screen.TagManagement.route)
                         onCloseDrawer()
                     }
                 )
             }
 
-            // 分类标题
-            item {
-                SectionHeader("分类")
-            }
 
-            // 分类列表
-            items(categories) { category ->
-                DrawerItem(
-                    icon = Icons.Default.Folder,
-                    title = category.name,
-                    isSelected = selectedCategoryId == category.id,
-                    onClick = {
-                        onCategorySelected(category.id)
-                        onTagsCleared()
-                    }
-                )
-            }
 
-            // 标签标题
-            item {
-                SectionHeader("标签")
-            }
-
-            // 标签列表
+            // 标签列表（不显示标签标题）
             items(tags) { tag ->
                 TagItem(
                     tag = tag,
@@ -126,7 +104,7 @@ fun NavigationDrawer(
             // 设置和关于
             item {
                 Spacer(modifier = Modifier.height(16.dp))
-                Divider()
+                HorizontalDivider()
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
@@ -179,7 +157,7 @@ private fun DrawerHeader(onCloseDrawer: () -> Unit) {
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "LeoHang的私人日记",
+                text = "LeoHangの日记",
                 style = MaterialTheme.typography.headlineMedium,
                 color = Color.White,
                 fontWeight = FontWeight.Bold
@@ -202,18 +180,6 @@ private fun DrawerHeader(onCloseDrawer: () -> Unit) {
             )
         }
     }
-}
-
-@Composable
-private fun SectionHeader(title: String) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.titleSmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-    )
 }
 
 @Composable
