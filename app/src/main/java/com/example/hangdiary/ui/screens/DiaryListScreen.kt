@@ -36,6 +36,7 @@ import com.example.hangdiary.viewmodel.SettingsViewModel
 import com.example.hangdiary.viewmodel.TagManagementViewModel
 import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -72,7 +73,7 @@ fun DiaryListScreen(
     var showColorPickerDialog by remember { mutableStateOf(false) }
 
     // 日期格式化器，包含星期几（中文格式）
-    val dateFormatter = DateTimeFormatter.ofPattern("yyyy年M月d日 HH点mm分 EEEE")
+    val dateFormatter = DateTimeFormatter.ofPattern("yyyy年M月d日 HH点mm分 EEEE", Locale.CHINA)
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -735,7 +736,7 @@ fun DiaryItemGrid(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = diary.createdAt.format(DateTimeFormatter.ofPattern("M月d日 EEEE")),
+                    text = diary.createdAt.format(DateTimeFormatter.ofPattern("M月d日 EEEE", Locale.CHINA)),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )

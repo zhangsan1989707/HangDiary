@@ -55,8 +55,8 @@ import com.example.hangdiary.viewmodel.SettingsViewModel
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.time.format.TextStyle
 import java.util.Locale
+import java.time.format.TextStyle
 
 /**
  * 图片项组件
@@ -532,7 +532,7 @@ fun ViewableContent(
     val scrollState = rememberScrollState()
 
     // 格式化日期（中文格式）
-    val formatter = DateTimeFormatter.ofPattern("yyyy年M月d日 HH点mm分ss秒 EEEE")
+    val formatter = DateTimeFormatter.ofPattern("yyyy年M月d日 HH点mm分ss秒 EEEE", Locale.CHINA)
     val formattedDate = diary.createdAt.format(formatter)
 
     Column(

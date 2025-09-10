@@ -25,6 +25,7 @@ import androidx.navigation.NavController
 import com.example.hangdiary.data.model.Todo
 import com.example.hangdiary.viewmodel.TodoListViewModel
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 /**
  * 待办事项列表页面
@@ -41,7 +42,7 @@ fun TodoListScreen(
     var showEditDialog by remember { mutableStateOf(false) }
     var editingTodo by remember { mutableStateOf<Todo?>(null) }
 
-    val dateFormatter = DateTimeFormatter.ofPattern("yyyy年M月d日 HH点mm分")
+    val dateFormatter = DateTimeFormatter.ofPattern("yyyy年M月d日 HH点mm分", Locale.CHINA)
 
     Scaffold(
         topBar = {
@@ -244,7 +245,7 @@ private fun TodoItem(
 
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = todo.createdAt.format(DateTimeFormatter.ofPattern("M月d日 HH点mm分")),
+                    text = todo.createdAt.format(DateTimeFormatter.ofPattern("M月d日 HH点mm分", Locale.CHINA)),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                 )
