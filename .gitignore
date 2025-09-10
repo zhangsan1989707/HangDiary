@@ -9,7 +9,31 @@
 /.idea/assetWizardSettings.xml
 .DS_Store
 /build
-/captures
+captures
 .externalNativeBuild
 .cxx
 local.properties
+
+# 测试数据
+/test-data/
+/test_files/
+*.test
+
+# 构建的APK文件
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# 发布文件
+/release/
+/app/release/
+
+# 临时文件
+*.tmp
+*.temp
+*.log
+
+# Kotlin编译缓存
+.kotlin/sessions/
+.kotlin/errors/

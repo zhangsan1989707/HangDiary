@@ -1,1 +1,9 @@
 /build
+/release
+*.apk
+*.aab
+*.ap_
+*.dex
+*.tmp
+*.temp
+*.log
