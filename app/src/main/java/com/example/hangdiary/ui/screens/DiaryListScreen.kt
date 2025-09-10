@@ -71,8 +71,8 @@ fun DiaryListScreen(
     // 颜色选择对话框状态
     var showColorPickerDialog by remember { mutableStateOf(false) }
 
-    // 日期格式化器，包含星期几
-    val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm EEEE")
+    // 日期格式化器，包含星期几（中文格式）
+    val dateFormatter = DateTimeFormatter.ofPattern("yyyy年M月d日 HH点mm分 EEEE")
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -243,8 +243,8 @@ fun DiaryListScreen(
                     .fillMaxSize()
                     .padding(paddingValues)
             ) {
-                if (diaryList.isEmpty()) {
-                    // 空状态
+                if (diaryList.isEmpty() && !viewModel.isLoading.value) {
+                    // 空状态 - 只有在非加载状态下才显示
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
@@ -270,6 +270,14 @@ fun DiaryListScreen(
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
                             textAlign = TextAlign.Center
                         )
+                    }
+                } else if (viewModel.isLoading.value) {
+                    // 加载状态
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
                     }
                 } else {
                     // 根据视图模式显示日记列表或网格
@@ -727,7 +735,7 @@ fun DiaryItemGrid(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = diary.createdAt.format(DateTimeFormatter.ofPattern("MM/dd EEEE")),
+                    text = diary.createdAt.format(DateTimeFormatter.ofPattern("M月d日 EEEE")),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )

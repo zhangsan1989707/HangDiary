@@ -41,7 +41,7 @@ fun TodoListScreen(
     var showEditDialog by remember { mutableStateOf(false) }
     var editingTodo by remember { mutableStateOf<Todo?>(null) }
 
-    val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+    val dateFormatter = DateTimeFormatter.ofPattern("yyyy年M月d日 HH点mm分")
 
     Scaffold(
         topBar = {
@@ -244,7 +244,7 @@ private fun TodoItem(
 
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = todo.createdAt.format(DateTimeFormatter.ofPattern("MM-dd HH:mm")),
+                    text = todo.createdAt.format(DateTimeFormatter.ofPattern("M月d日 HH点mm分")),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                 )

@@ -5,12 +5,15 @@ import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.hangdiary.data.model.Diary
 import com.example.hangdiary.data.model.Tag
 import com.example.hangdiary.data.repository.DiaryRepository
+import com.example.hangdiary.data.repository.SettingsRepository
 import com.example.hangdiary.data.repository.TagRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,11 +21,14 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import javax.inject.Inject
 
-class DiaryDetailViewModel(
+@HiltViewModel
+class DiaryDetailViewModel @Inject constructor(
     private val diaryRepository: DiaryRepository,
     private val tagRepository: TagRepository,
-    private val defaultDiaryColor: String? = null
+    private val settingsRepository: SettingsRepository,
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     
     private val _diaryState = MutableStateFlow<Diary?>(null)
@@ -45,35 +51,52 @@ class DiaryDetailViewModel(
     var selectedTagIds by mutableStateOf(emptyList<Long>())
     
     private val dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
+    private val currentDiaryId: Long = savedStateHandle["diaryId"] ?: 0L
     
-    fun loadDiary(diaryId: Long) {
-        if (diaryId == 0L) {
+    init {
+        loadDiary()
+    }
+
+    private fun loadDiary() {
+        if (currentDiaryId == 0L) {
             // 新建日记，应用默认颜色设置
             _diaryState.value = null
             title = ""
             content = ""
-            color = defaultDiaryColor
+            
+            // 从设置中获取默认颜色
+            viewModelScope.launch {
+                val settings = settingsRepository.getFirstSettings().first()
+                color = settings?.defaultDiaryColor ?: "#FFEB3B"
+            }
+            
             imagePaths = emptyList()
             selectedTagIds = emptyList()
             isEditing = true
             return
         }
-        
+
         viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
             try {
-                val diary = diaryRepository.getDiaryById(diaryId)
-                _diaryState.value = diary
-                diary?.let {
-                    title = it.title
-                    content = it.content
-                    color = it.color
-                    imagePaths = it.imagePaths
-                    
-                    // 加载日记的标签
-                    val tags = tagRepository.getTagsForDiary(it.id).first()
-                    selectedTagIds = tags.map { tag -> tag.id }
+                val diary = diaryRepository.getDiaryById(currentDiaryId)
+                if (diary == null) {
+                    // 日记确实不存在，设置错误状态
+                    _diaryState.value = null
+                    _error.value = "日记不存在或已被删除"
+                } else {
+                    _diaryState.value = diary
+                    diary.let {
+                        title = it.title
+                        content = it.content
+                        color = it.color
+                        imagePaths = it.imagePaths
+
+                        // 加载日记的标签
+                        val tags = tagRepository.getTagsForDiary(it.id).first()
+                        selectedTagIds = tags.map { tag -> tag.id }
+                    }
                 }
             } catch (e: Exception) {
                 _error.value = "加载日记失败: ${e.message}"
@@ -81,6 +104,10 @@ class DiaryDetailViewModel(
                 _isLoading.value = false
             }
         }
+    }
+
+    fun reloadDiary() {
+        loadDiary()
     }
     
     suspend fun saveDiary() {

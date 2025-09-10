@@ -17,6 +17,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -37,8 +39,10 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import kotlinx.coroutines.delay
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.hangdiary.R
@@ -527,8 +531,8 @@ fun ViewableContent(
 ) {
     val scrollState = rememberScrollState()
 
-    // 格式化日期
-    val formatter = DateTimeFormatter.ofPattern("yyyy年M月d日 EEEE")
+    // 格式化日期（中文格式）
+    val formatter = DateTimeFormatter.ofPattern("yyyy年M月d日 HH点mm分ss秒 EEEE")
     val formattedDate = diary.createdAt.format(formatter)
 
     Column(
@@ -540,9 +544,10 @@ fun ViewableContent(
     ) {
         // 标题
         Text(
-            text = diary.title,
+            text = diary.title.ifBlank { "无标题" },
             style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            color = if (diary.title.isBlank()) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurface
         )
 
         // 日期显示
@@ -567,9 +572,10 @@ fun ViewableContent(
 
         // 内容
         Text(
-            text = diary.content,
+            text = diary.content.ifBlank { "暂无内容" },
             style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            color = if (diary.content.isBlank()) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurface
         )
         
         // 颜色信息
@@ -643,9 +649,7 @@ fun DiaryDetailScreen(
 ) {
     val context = LocalContext.current
     val settings by settingsViewModel.settingsState.collectAsState()
-    val viewModel: DiaryDetailViewModel = remember(diaryId, settings?.defaultDiaryColor) { 
-        DiaryDetailViewModel(diaryRepository, tagRepository, settings?.defaultDiaryColor) 
-    }
+    val viewModel: DiaryDetailViewModel = hiltViewModel()
 
     val diary by viewModel.diaryState.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
@@ -667,11 +671,7 @@ fun DiaryDetailScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     // 初始化日记数据
-    LaunchedEffect(diaryId) {
-        if (diaryId > 0) {
-            viewModel.loadDiary(diaryId)
-        }
-    }
+    // ViewModel现在会在初始化时自动加载日记，无需手动调用
 
     // 加载标签数据
     LaunchedEffect(Unit) {
@@ -706,11 +706,15 @@ fun DiaryDetailScreen(
         }
     }
 
-    // 监听错误状态
+    // 监听错误状态，避免瞬间闪现
     LaunchedEffect(error) {
         error?.let {
-            scope.launch {
-                snackbarHostState.showSnackbar(it)
+            // 只有当错误持续存在时才显示
+            delay(300) // 短暂延迟避免闪现
+            if (error != null) { // 再次检查错误是否仍然存在
+                scope.launch {
+                    snackbarHostState.showSnackbar(it)
+                }
             }
         }
     }
@@ -870,8 +874,8 @@ fun DiaryDetailScreen(
                         }) {
                             Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.delete))
                         }
-                    }
-                    if (viewModel.isEditing) {
+                    } else if (diaryId != 0L && viewModel.isEditing) {
+                        // 编辑模式下的保存按钮（仅用于已有日记）
                         IconButton(onClick = {
                             scope.launch {
                                 try {
@@ -910,7 +914,31 @@ fun DiaryDetailScreen(
                     .padding(paddingValues),
                 contentAlignment = Alignment.Center
             ) {
-                Text(text = error ?: stringResource(R.string.error_occurred))
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text = error ?: stringResource(R.string.error_occurred),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                    )
+                    Button(
+                        onClick = { viewModel.reloadDiary() }
+                    ) {
+                        Text("重试")
+                    }
+                    if (diaryId != 0L) {
+                        Button(
+                            onClick = { navController.navigateUp() },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.secondary
+                            )
+                        ) {
+                            Text("返回")
+                        }
+                    }
+                }
             }
         } else {
             Column(
@@ -937,7 +965,42 @@ fun DiaryDetailScreen(
                     )
                 } else {
                     // 查看模式
-                    diary?.let { ViewableContent(it, selectedTags) }
+                    val currentDiary = diary
+                    if (currentDiary != null) {
+                        ViewableContent(currentDiary, selectedTags)
+                    } else {
+                        // 日记不存在或加载失败的空状态
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Description,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(64.dp),
+                                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(
+                                    text = "日记不存在或已被删除",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "请返回列表页面重试",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }

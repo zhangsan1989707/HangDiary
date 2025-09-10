@@ -34,8 +34,15 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var settingsRepository: com.example.hangdiary.data.repository.SettingsRepository
     
+    @Inject
+    lateinit var databaseInitializer: com.example.hangdiary.data.DatabaseInitializer
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // 初始化数据库，插入示例数据
+        databaseInitializer.initialize()
+        
         // 禁用启动画面
         installSplashScreen()
         enableEdgeToEdge()

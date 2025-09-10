@@ -107,5 +107,20 @@ object DatabaseModule {
      */
     @Provides
     fun provideSettingsDao(database: AppDatabase) = database.settingsDao()
+    
+    /**
+     * 提供DatabaseInitializer实例
+     * @param context 应用上下文
+     * @param diaryRepository 日记仓库
+     * @return DatabaseInitializer实例
+     */
+    @Provides
+    @Singleton
+    fun provideDatabaseInitializer(
+        @ApplicationContext context: Context,
+        diaryRepository: com.example.hangdiary.data.repository.DiaryRepository
+    ): com.example.hangdiary.data.DatabaseInitializer {
+        return com.example.hangdiary.data.DatabaseInitializer(context, diaryRepository)
+    }
 }
 

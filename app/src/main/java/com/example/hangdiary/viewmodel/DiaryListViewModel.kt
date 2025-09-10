@@ -36,6 +36,10 @@ class DiaryListViewModel(
     private val _diaryListState = MutableStateFlow<List<DiaryWithTags>>(emptyList())
     val diaryListState: StateFlow<List<DiaryWithTags>> = _diaryListState
     
+    // 加载状态
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading
+    
     // 当前搜索关键词
     private var currentSearchKeyword: String? = null
     
@@ -52,6 +56,7 @@ class DiaryListViewModel(
      */
     fun loadAllDiaries() {
         viewModelScope.launch {
+            _isLoading.value = true
             currentSearchKeyword = null
             currentTagIds = emptyList()
             
@@ -67,9 +72,11 @@ class DiaryListViewModel(
                         diaryWithTagsArray.toList()
                     }.collect { diaryWithTagsList ->
                         _diaryListState.value = diaryWithTagsList
+                        _isLoading.value = false
                     }
                 } else {
                     _diaryListState.value = emptyList()
+                    _isLoading.value = false
                 }
             }
         }
@@ -81,6 +88,7 @@ class DiaryListViewModel(
      */
     fun searchDiaries(keyword: String) {
         viewModelScope.launch {
+            _isLoading.value = true
             currentSearchKeyword = keyword
             currentTagIds = emptyList()
             
@@ -99,9 +107,11 @@ class DiaryListViewModel(
                             diaryWithTagsArray.toList()
                         }.collect { diaryWithTagsList ->
                             _diaryListState.value = diaryWithTagsList
+                            _isLoading.value = false
                         }
                     } else {
                         _diaryListState.value = emptyList()
+                        _isLoading.value = false
                     }
                 }
             }
@@ -115,6 +125,7 @@ class DiaryListViewModel(
      */
     fun loadDiariesByDateRange(start: LocalDateTime, end: LocalDateTime) {
         viewModelScope.launch {
+            _isLoading.value = true
             currentSearchKeyword = null
             currentTagIds = emptyList()
             
@@ -130,9 +141,11 @@ class DiaryListViewModel(
                         diaryWithTagsArray.toList()
                     }.collect { diaryWithTagsList ->
                         _diaryListState.value = diaryWithTagsList
+                        _isLoading.value = false
                     }
                 } else {
                     _diaryListState.value = emptyList()
+                    _isLoading.value = false
                 }
             }
         }

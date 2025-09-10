@@ -8,6 +8,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -19,9 +21,13 @@ import javax.inject.Inject
 class SettingsViewModel @Inject constructor(
     private val settingsRepository: SettingsRepository
 ) : ViewModel() {
-    // 设置状态
-    private val _settingsState = MutableStateFlow<Settings?>(null)
-    val settingsState: StateFlow<Settings?> = _settingsState.asStateFlow()
+    // 设置状态 - 直接从repository获取Flow，实现实时更新
+    val settingsState: StateFlow<Settings?> = settingsRepository.getFirstSettings()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
+        )
     
     // 向后兼容的设置属性
     val settings: StateFlow<Settings?> = settingsState
@@ -35,20 +41,13 @@ class SettingsViewModel @Inject constructor(
     val error: StateFlow<String?> = _error.asStateFlow()
 
     init {
-        // 初始化时加载设置
-        loadSettings()
-    }
-
-    /**
-     * 加载设置
-     */
-    fun loadSettings() {
+        // 初始化时确保有默认设置
         viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
             try {
-                val settings = settingsRepository.getOrCreateDefaultSettings()
-                _settingsState.value = settings
+                settingsRepository.getOrCreateDefaultSettings()
+                // 不再需要手动设置状态，Flow会自动更新
             } catch (e: Exception) {
                 _error.value = e.message ?: "加载设置失败"
             } finally {
@@ -63,15 +62,18 @@ class SettingsViewModel @Inject constructor(
      */
     fun updateViewMode(viewMode: String) {
         viewModelScope.launch {
-            val currentSettings = _settingsState.value
-            if (currentSettings != null) {
-                try {
+            _isLoading.value = true
+            _error.value = null
+            try {
+                val currentSettings = settingsState.value
+                if (currentSettings != null) {
                     settingsRepository.updateViewMode(currentSettings.id, viewMode)
-                    // 重新加载设置以更新状态
-                    loadSettings()
-                } catch (e: Exception) {
-                    _error.value = e.message ?: "更新视图设置失败"
+                    // Flow会自动更新，无需重新加载
                 }
+            } catch (e: Exception) {
+                _error.value = e.message ?: "更新视图设置失败"
+            } finally {
+                _isLoading.value = false
             }
         }
     }
@@ -84,15 +86,18 @@ class SettingsViewModel @Inject constructor(
      */
     fun updateDarkMode(isDarkMode: Boolean) {
         viewModelScope.launch {
-            val currentSettings = _settingsState.value
-            if (currentSettings != null) {
-                try {
+            _isLoading.value = true
+            _error.value = null
+            try {
+                val currentSettings = settingsState.value
+                if (currentSettings != null) {
                     settingsRepository.updateDarkMode(currentSettings.id, isDarkMode)
-                    // 重新加载设置以更新状态
-                    loadSettings()
-                } catch (e: Exception) {
-                    _error.value = e.message ?: "更新暗黑模式设置失败"
+                    // Flow会自动更新，无需重新加载
                 }
+            } catch (e: Exception) {
+                _error.value = e.message ?: "更新暗黑模式设置失败"
+            } finally {
+                _isLoading.value = false
             }
         }
     }
@@ -103,15 +108,18 @@ class SettingsViewModel @Inject constructor(
      */
     fun updateCardView(isCardView: Boolean) {
         viewModelScope.launch {
-            val currentSettings = _settingsState.value
-            if (currentSettings != null) {
-                try {
+            _isLoading.value = true
+            _error.value = null
+            try {
+                val currentSettings = settingsState.value
+                if (currentSettings != null) {
                     settingsRepository.updateCardView(currentSettings.id, isCardView)
-                    // 重新加载设置以更新状态
-                    loadSettings()
-                } catch (e: Exception) {
-                    _error.value = e.message ?: "更新卡片视图设置失败"
+                    // Flow会自动更新，无需重新加载
                 }
+            } catch (e: Exception) {
+                _error.value = e.message ?: "更新卡片视图设置失败"
+            } finally {
+                _isLoading.value = false
             }
         }
     }
@@ -136,15 +144,18 @@ class SettingsViewModel @Inject constructor(
      */
     fun updateDefaultDiaryColor(defaultDiaryColor: String?) {
         viewModelScope.launch {
-            val currentSettings = _settingsState.value
-            if (currentSettings != null) {
-                try {
+            _isLoading.value = true
+            _error.value = null
+            try {
+                val currentSettings = settingsState.value
+                if (currentSettings != null) {
                     settingsRepository.updateDefaultDiaryColor(currentSettings.id, defaultDiaryColor)
-                    // 重新加载设置以更新状态
-                    loadSettings()
-                } catch (e: Exception) {
-                    _error.value = e.message ?: "更新默认日记颜色设置失败"
+                    // Flow会自动更新，无需重新加载
                 }
+            } catch (e: Exception) {
+                _error.value = e.message ?: "更新默认日记颜色设置失败"
+            } finally {
+                _isLoading.value = false
             }
         }
     }
