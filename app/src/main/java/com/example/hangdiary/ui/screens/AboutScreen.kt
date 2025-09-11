@@ -110,7 +110,7 @@ fun AboutScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         FeatureItem(text = "简洁优雅的界面设计")
-                        FeatureItem(text = "支持文字、图片、心情、天气等多种元素")
+                        FeatureItem(text = "支持日记和待办事项管理")
                         FeatureItem(text = "灵活的日记管理功能")
                         FeatureItem(text = "个性化的设置选项")
                         FeatureItem(text = "本地数据存储，保护隐私")
@@ -134,8 +134,8 @@ fun AboutScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         InfoItem(label = "开发者", value = "Mike")
-                        InfoItem(label = "联系邮箱", value = "mike@example.com")
-                        InfoItem(label = "开发时间", value = "2023")
+                        InfoItem(label = "联系邮箱", value = "2188848160@qq.com")
+                        InfoItem(label = "开发时间", value = "2025")
                     }
                 }
             }
