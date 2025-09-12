@@ -67,6 +67,30 @@ interface TodoDao {
     /**
      * 搜索待办事项
      */
-    @Query("SELECT * FROM todos WHERE title LIKE '%' || :query || '%' OR content LIKE '%' || :query || '%' ORDER BY createdAt DESC")
+    @Query("SELECT * FROM todos WHERE title LIKE '%' || :query || '%' OR notes LIKE '%' || :query || '%' OR category LIKE '%' || :query || '%' ORDER BY createdAt DESC")
     fun searchTodos(query: String): Flow<List<Todo>>
+
+    /**
+     * 根据分类获取待办事项
+     */
+    @Query("SELECT * FROM todos WHERE category = :category ORDER BY priority DESC, createdAt DESC")
+    fun getTodosByCategory(category: String): Flow<List<Todo>>
+
+    /**
+     * 获取所有分类
+     */
+    @Query("SELECT DISTINCT category FROM todos WHERE category IS NOT NULL ORDER BY category")
+    fun getAllCategories(): Flow<List<String>>
+
+    /**
+     * 根据优先级获取待办事项
+     */
+    @Query("SELECT * FROM todos WHERE priority = :priority ORDER BY createdAt DESC")
+    fun getTodosByPriority(priority: Int): Flow<List<Todo>>
+
+    /**
+     * 获取今日到期的待办事项
+     */
+    @Query("SELECT * FROM todos WHERE dueDate = :date AND isCompleted = 0 ORDER BY dueTime ASC")
+    fun getTodosForDate(date: String): Flow<List<Todo>>
 }

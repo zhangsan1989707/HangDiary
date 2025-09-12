@@ -33,7 +33,7 @@ import com.example.hangdiary.data.util.StringListConverter
         DiaryTagCrossRef::class,
         Settings::class
     ],
-    version = 10,
+    version = 11,
     exportSchema = false
 )
 @TypeConverters(LocalDateTimeConverter::class, StringListConverter::class)
@@ -268,6 +268,70 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        // 数据库迁移：从版本10到版本11，更新Todo表结构
+        private val MIGRATION_10_11 = object : Migration(10, 11) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                try {
+                    // 检查todos表是否存在新字段
+                    val cursor = database.query("SELECT * FROM sqlite_master WHERE type='table' AND name='todos'")
+                    if (cursor.count > 0) {
+                        cursor.moveToFirst()
+                        val sql = cursor.getString(cursor.getColumnIndex("sql"))
+                        cursor.close()
+                        
+                        // 创建新的todos表结构
+                        database.execSQL(
+                            "CREATE TABLE IF NOT EXISTS todos_new (" +
+                            "id INTEGER PRIMARY KEY NOT NULL, " +
+                            "title TEXT NOT NULL, " +
+                            "notes TEXT, " +
+                            "isCompleted INTEGER NOT NULL, " +
+                            "createdAt TEXT NOT NULL, " +
+                            "updatedAt TEXT, " +
+                            "dueDate TEXT, " +
+                            "dueTime TEXT, " +
+                            "category TEXT, " +
+                            "priority INTEGER NOT NULL DEFAULT 1)"
+                        )
+                        
+                        // 复制现有数据，将content映射到notes
+                        database.execSQL(
+                            "INSERT INTO todos_new (id, title, notes, isCompleted, createdAt, updatedAt, dueDate, dueTime, category, priority) " +
+                            "SELECT id, title, content, isCompleted, createdAt, updatedAt, " +
+                            "CASE WHEN dueDate IS NOT NULL THEN date(dueDate) ELSE NULL END, " +
+                            "CASE WHEN dueDate IS NOT NULL THEN time(dueDate) ELSE NULL END, " +
+                            "NULL, 1 FROM todos"
+                        )
+                        
+                        // 删除旧表
+                        database.execSQL("DROP TABLE todos")
+                        
+                        // 重命名新表
+                        database.execSQL("ALTER TABLE todos_new RENAME TO todos")
+                    }
+                } catch (e: Exception) {
+                    // 如果出错，尝试直接创建新表结构
+                    try {
+                        database.execSQL(
+                            "CREATE TABLE IF NOT EXISTS todos (" +
+                            "id INTEGER PRIMARY KEY NOT NULL, " +
+                            "title TEXT NOT NULL, " +
+                            "notes TEXT, " +
+                            "isCompleted INTEGER NOT NULL, " +
+                            "createdAt TEXT NOT NULL, " +
+                            "updatedAt TEXT, " +
+                            "dueDate TEXT, " +
+                            "dueTime TEXT, " +
+                            "category TEXT, " +
+                            "priority INTEGER NOT NULL DEFAULT 1)"
+                        )
+                    } catch (ex: Exception) {
+                        // 如果仍然出错，忽略错误，因为表可能已经存在
+                    }
+                }
+            }
+        }
+
         /**
          * 获取数据库实例
          * @param context 上下文
@@ -282,7 +346,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "hang_diary_database"
                 )
-                    .addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_9_10) // 添加迁移逻辑
+                    .addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_9_10, MIGRATION_10_11) // 添加迁移逻辑
                     .fallbackToDestructiveMigration() // 数据库版本升级时销毁旧数据
                     .build()
                 INSTANCE = instance

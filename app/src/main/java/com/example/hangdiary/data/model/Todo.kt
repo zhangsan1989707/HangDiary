@@ -2,6 +2,8 @@ package com.example.hangdiary.data.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import java.time.LocalDate
+import java.time.LocalTime
 import java.time.LocalDateTime
 
 /**
@@ -17,8 +19,8 @@ data class Todo(
     /** 待办标题 */
     val title: String,
 
-    /** 待办内容描述 */
-    val content: String? = null,
+    /** 待办内容描述/备注 */
+    val notes: String? = null,
 
     /** 是否已完成 */
     val isCompleted: Boolean = false,
@@ -30,5 +32,18 @@ data class Todo(
     val updatedAt: LocalDateTime? = null,
 
     /** 截止日期 */
-    val dueDate: LocalDateTime? = null
-)
+    val dueDate: LocalDate? = null,
+
+    /** 截止时间 */
+    val dueTime: LocalTime? = null,
+
+    /** 分类/类别 */
+    val category: String? = null,
+
+    /** 优先级 (1-低, 2-中, 3-高) */
+    val priority: Int = 1
+) {
+    // 兼容性属性，保持向后兼容
+    val content: String?
+        get() = notes
+}

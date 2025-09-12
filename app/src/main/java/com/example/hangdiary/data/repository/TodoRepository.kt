@@ -39,12 +39,22 @@ class TodoRepository @Inject constructor(
     /**
      * 创建新的待办事项
      */
-    suspend fun createTodo(title: String, content: String? = null, dueDate: LocalDateTime? = null): Long {
+    suspend fun createTodo(
+        title: String, 
+        notes: String? = null, 
+        dueDate: java.time.LocalDate? = null,
+        dueTime: java.time.LocalTime? = null,
+        category: String? = null,
+        priority: Int = 1
+    ): Long {
         val todo = Todo(
             title = title,
-            content = content,
+            notes = notes,
             createdAt = LocalDateTime.now(),
-            dueDate = dueDate
+            dueDate = dueDate,
+            dueTime = dueTime,
+            category = category,
+            priority = priority
         )
         return todoDao.insertTodo(todo)
     }
@@ -79,4 +89,25 @@ class TodoRepository @Inject constructor(
      * 搜索待办事项
      */
     fun searchTodos(query: String): Flow<List<Todo>> = todoDao.searchTodos(query)
+
+    /**
+     * 根据分类获取待办事项
+     */
+    fun getTodosByCategory(category: String): Flow<List<Todo>> = todoDao.getTodosByCategory(category)
+
+    /**
+     * 获取所有分类
+     */
+    fun getAllCategories(): Flow<List<String>> = todoDao.getAllCategories()
+
+    /**
+     * 根据优先级获取待办事项
+     */
+    fun getTodosByPriority(priority: Int): Flow<List<Todo>> = todoDao.getTodosByPriority(priority)
+
+    /**
+     * 获取今日到期的待办事项
+     */
+    fun getTodosForDate(date: java.time.LocalDate): Flow<List<Todo>> = 
+        todoDao.getTodosForDate(date.toString())
 }
