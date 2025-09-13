@@ -308,6 +308,9 @@ abstract class AppDatabase : RoomDatabase() {
                         
                         // 重命名新表
                         database.execSQL("ALTER TABLE todos_new RENAME TO todos")
+                        
+                        // 创建性能优化索引
+                        createPerformanceIndexes(database)
                     }
                 } catch (e: Exception) {
                     // 如果出错，尝试直接创建新表结构
@@ -325,10 +328,33 @@ abstract class AppDatabase : RoomDatabase() {
                             "category TEXT, " +
                             "priority INTEGER NOT NULL DEFAULT 1)"
                         )
+                        createPerformanceIndexes(database)
                     } catch (ex: Exception) {
                         // 如果仍然出错，忽略错误，因为表可能已经存在
                     }
                 }
+            }
+            
+            private fun createPerformanceIndexes(database: SupportSQLiteDatabase) {
+                // 为日记表创建索引
+                database.execSQL("CREATE INDEX IF NOT EXISTS idx_diary_created_at ON diaries(created_at DESC)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS idx_diary_title ON diaries(title)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS idx_diary_pinned ON diaries(isPinned DESC, created_at DESC)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS idx_diary_color ON diaries(color)")
+                
+                // 为待办表创建索引
+                database.execSQL("CREATE INDEX IF NOT EXISTS idx_todo_created_at ON todos(createdAt DESC)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS idx_todo_category ON todos(category)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS idx_todo_priority_date ON todos(priority DESC, dueDate ASC)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS idx_todo_completed ON todos(isCompleted, createdAt DESC)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS idx_todo_due_date ON todos(dueDate, dueTime)")
+                
+                // 为标签表创建索引
+                database.execSQL("CREATE INDEX IF NOT EXISTS idx_tag_name ON tags(name)")
+                
+                // 为日记标签关联表创建索引
+                database.execSQL("CREATE INDEX IF NOT EXISTS idx_diary_tag_diary_id ON diary_tag_cross_ref(diaryId)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS idx_diary_tag_tag_id ON diary_tag_cross_ref(tagId)")
             }
         }
 

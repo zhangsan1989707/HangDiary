@@ -25,6 +25,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.example.hangdiary.data.model.Diary
@@ -74,6 +77,18 @@ fun DiaryListScreen(
 
     // 日期格式化器，包含星期几（中文格式）
     val dateFormatter = DateTimeFormatter.ofPattern("yyyy年M月d日 HH点mm分 EEEE", Locale.CHINA)
+    
+    // 页面可见性相关
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val coroutineScope = rememberCoroutineScope()
+    
+    // 监听页面可见性变化，优化数据加载
+    LaunchedEffect(lifecycleOwner) {
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            // 当页面恢复可见时，优先使用缓存数据，避免闪烁
+            viewModel.loadAllDiaries(forceRefresh = false)
+        }
+    }
 
     ModalNavigationDrawer(
         drawerState = drawerState,

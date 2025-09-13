@@ -3,6 +3,7 @@ agp = "8.12.1"
 materialIconsExtended = "1.6.7"
 coil = "2.6.0"
 kotlin = "2.0.21"
+ksp = "2.0.21-1.0.25"  # 为Kotlin 2.0.21选择兼容的KSP版本
 coreKtx = "1.10.1"
 junit = "4.13.2"
 junitVersion = "1.1.5"
@@ -48,6 +49,8 @@ androidx-foundation-layout = { group = "androidx.compose.foundation", name = "fo
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+
 kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 

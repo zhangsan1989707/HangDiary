@@ -2,7 +2,12 @@ package com.example.hangdiary.data.repository
 
 import com.example.hangdiary.data.dao.DiaryDao
 import com.example.hangdiary.data.model.Diary
+import com.example.hangdiary.data.model.DiaryWithTags
+import com.example.hangdiary.data.model.Tag
+import com.example.hangdiary.data.repository.TagRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import java.time.LocalDateTime
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -13,7 +18,8 @@ import javax.inject.Singleton
  */
 @Singleton
 class DiaryRepository @Inject constructor(
-    private val diaryDao: DiaryDao
+    private val diaryDao: DiaryDao,
+    private val tagRepository: TagRepository
 ) {
     /**
      * 插入日记
@@ -57,6 +63,20 @@ class DiaryRepository @Inject constructor(
      */
     fun getAllDiaries(): Flow<List<Diary>> {
         return diaryDao.getAllDiaries()
+    }
+    
+    /**
+     * 获取所有带标签的日记
+     * @return 带标签的日记列表Flow
+     */
+    fun getAllDiariesWithTags(): Flow<List<DiaryWithTags>> {
+        return getAllDiaries().map { diaries ->
+            diaries.map { diary ->
+                // We'll return DiaryWithTags with empty tags for now
+                // The actual tags will be loaded in the UseCase layer
+                DiaryWithTags(diary, emptyList())
+            }
+        }
     }
 
     /**

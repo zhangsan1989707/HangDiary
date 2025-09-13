@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    id("kotlin-kapt")  // 添加kapt插件
+    alias(libs.plugins.ksp)  // 使用KSP替代KAPT
     id("dagger.hilt.android.plugin")  // 添加Hilt插件
 }
 
@@ -36,7 +36,10 @@ android {
     }
     kotlinOptions {
         jvmTarget = "11"
+
+
     }
+
     buildFeatures {
         compose = true
     }
@@ -60,7 +63,7 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.foundation.layout)
-    kapt(libs.androidx.room.compiler)  // 使用kapt替代annotationProcessor
+    ksp(libs.androidx.room.compiler)  // 使用KSP
 
     // Gson依赖，用于JSON处理
     implementation("com.google.code.gson:gson:2.10.1")
@@ -70,7 +73,7 @@ dependencies {
 
     // Hilt依赖注入
     implementation("com.google.dagger:hilt-android:2.51.1")
-    kapt("com.google.dagger:hilt-compiler:2.51.1")
+    ksp("com.google.dagger:hilt-compiler:2.51.1")  // 使用KSP
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
     // 其他依赖

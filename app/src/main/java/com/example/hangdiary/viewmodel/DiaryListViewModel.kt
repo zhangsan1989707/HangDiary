@@ -46,6 +46,10 @@ class DiaryListViewModel(
     // 标签筛选
     private var currentTagIds: List<Long> = emptyList()
     
+    // 缓存数据
+    private var cachedDiaryList: List<DiaryWithTags> = emptyList()
+    private var lastLoadedTime: LocalDateTime? = null
+    
     init {
         // 初始化时加载所有日记
         loadAllDiaries()
@@ -53,9 +57,23 @@ class DiaryListViewModel(
     
     /**
      * 加载所有日记
+     * @param forceRefresh 是否强制刷新数据（默认为false，优先使用缓存）
      */
-    fun loadAllDiaries() {
+    fun loadAllDiaries(forceRefresh: Boolean = false) {
         viewModelScope.launch {
+            // 如果有缓存数据且不是强制刷新，则直接使用缓存数据
+            if (cachedDiaryList.isNotEmpty() && !forceRefresh) {
+                // 先显示缓存数据，然后在后台静默刷新
+                _diaryListState.value = cachedDiaryList
+                _isLoading.value = false
+                
+                // 后台静默刷新数据
+                launch {
+                    refreshAllDiariesSilently()
+                }
+                return@launch
+            }
+            
             _isLoading.value = true
             currentSearchKeyword = null
             currentTagIds = emptyList()
@@ -72,12 +90,48 @@ class DiaryListViewModel(
                         diaryWithTagsArray.toList()
                     }.collect { diaryWithTagsList ->
                         _diaryListState.value = diaryWithTagsList
+                        cachedDiaryList = diaryWithTagsList
+                        lastLoadedTime = LocalDateTime.now()
                         _isLoading.value = false
                     }
                 } else {
                     _diaryListState.value = emptyList()
+                    cachedDiaryList = emptyList()
+                    lastLoadedTime = LocalDateTime.now()
                     _isLoading.value = false
                 }
+            }
+        }
+    }
+    
+    /**
+     * 后台静默刷新所有日记数据，不显示加载状态
+     */
+    private fun refreshAllDiariesSilently() {
+        viewModelScope.launch {
+            try {
+                diaryRepository.getAllDiaries().collectLatest { diaries ->
+                    val diaryFlows = diaries.map { diary ->
+                        tagRepository.getTagsForDiary(diary.id).map { tags ->
+                            DiaryWithTags(diary, tags)
+                        }
+                    }
+                    
+                    if (diaryFlows.isNotEmpty()) {
+                        combine(diaryFlows) { diaryWithTagsArray ->
+                            diaryWithTagsArray.toList()
+                        }.collect { diaryWithTagsList ->
+                            // 只有当数据真正发生变化时才更新UI
+                            if (diaryWithTagsList != cachedDiaryList) {
+                                _diaryListState.value = diaryWithTagsList
+                                cachedDiaryList = diaryWithTagsList
+                                lastLoadedTime = LocalDateTime.now()
+                            }
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                // 静默刷新失败时不做处理，保持现有缓存数据
             }
         }
     }

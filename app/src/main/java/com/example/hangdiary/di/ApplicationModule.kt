@@ -26,12 +26,13 @@ object ApplicationModule {
     /**
      * 提供DiaryRepository实例
      * @param diaryDao DiaryDao实例
+     * @param tagRepository TagRepository实例
      * @return DiaryRepository实例
      */
     @Provides
     @Singleton
-    fun provideDiaryRepository(diaryDao: DiaryDao): DiaryRepository {
-        return DiaryRepository(diaryDao)
+    fun provideDiaryRepository(diaryDao: DiaryDao, tagRepository: TagRepository): DiaryRepository {
+        return DiaryRepository(diaryDao, tagRepository)
     }
 
     /**
@@ -66,5 +67,32 @@ object ApplicationModule {
     @Singleton
     fun provideSettingsRepository(settingsDao: SettingsDao): SettingsRepository {
         return SettingsRepository(settingsDao)
+    }
+
+    /**
+     * 提供DiaryUseCases实例
+     * @param diaryRepository DiaryRepository实例
+     * @param tagRepository TagRepository实例
+     * @return DiaryUseCases实例
+     */
+    @Provides
+    @Singleton
+    fun provideDiaryUseCases(
+        diaryRepository: DiaryRepository,
+        tagRepository: TagRepository
+    ): com.example.hangdiary.domain.usecase.diary.DiaryUseCases {
+        return com.example.hangdiary.domain.usecase.diary.DiaryUseCases(
+            getDiaries = com.example.hangdiary.domain.usecase.diary.GetDiariesUseCase(diaryRepository),
+            getDiaryById = com.example.hangdiary.domain.usecase.diary.GetDiaryByIdUseCase(diaryRepository),
+            createDiary = com.example.hangdiary.domain.usecase.diary.CreateDiaryUseCase(diaryRepository),
+            updateDiary = com.example.hangdiary.domain.usecase.diary.UpdateDiaryUseCase(diaryRepository),
+            deleteDiary = com.example.hangdiary.domain.usecase.diary.DeleteDiaryUseCase(diaryRepository),
+            searchDiaries = com.example.hangdiary.domain.usecase.diary.SearchDiariesUseCase(diaryRepository),
+            getDiariesByTag = com.example.hangdiary.domain.usecase.diary.GetDiariesByTagUseCase(diaryRepository, tagRepository),
+            togglePinDiary = com.example.hangdiary.domain.usecase.diary.TogglePinDiaryUseCase(diaryRepository),
+            updateDiaryColor = com.example.hangdiary.domain.usecase.diary.UpdateDiaryColorUseCase(diaryRepository),
+            exportDiary = com.example.hangdiary.domain.usecase.diary.ExportDiaryUseCase(diaryRepository, tagRepository),
+            importDiary = com.example.hangdiary.domain.usecase.diary.ImportDiaryUseCase(diaryRepository, tagRepository)
+        )
     }
 }
